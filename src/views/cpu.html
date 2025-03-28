@@ -1,0 +1,81 @@
+<div class="container mt-5">
+    <div class="row">
+        <h2>Listado de procesadores</h2>
+        <hr />
+    </div>
+
+    <div class="row">
+        <table class="table table-primary table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Nombre de la Procesador</th>
+                    <th scope="col">Numero de nucleos</th>
+                    <th scope="col">Numero de hilos</th>
+                    <th scope="col">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#crear-editar-cpu">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (const cpu of cpus) { %>
+                    <tr>
+                        <td scope="row"><%= cpu.id %></td>
+                        <td><%= cpu.descripcion %></td>
+                        <td><%= cpu.nucleos %></td>
+                        <td><%= cpu.hilos %></td>
+                        <td>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crear-editar-cpu">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="crear-editar-cpu" tabindex="-1" aria-labelledby="tituloModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="/cpu" method="post">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tituloModal">Agregar procesador</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container">
+                            <h5>Especificaciones del procesador</h5>
+                            <hr />
+
+                            <div class="row">
+                                <div class="col">
+                                    <span>Nombre del procesador</span>
+                                    <input type="text" class="form-control" name="cpuDescription">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <span>Numero de nucleos</span>
+                                    <input type="number" class="form-control" min="1" id="cpu-core-input" name="cpuCores">
+                                </div>
+                                <div class="col">
+                                    <span>Numero de hilos</span>
+                                    <input type="number" class="form-control" min="1" id="cpu-thread-input" name="cpuThreads">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Agregar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

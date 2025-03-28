@@ -1,0 +1,28 @@
+.inventory-item i {
+    font-size: 5rem;
+}
+
+a:has(.inventory-item) {
+    text-decoration: none;
+    color: unset;
+}
+
+a:has(.inventory-item):hover .inventory-item {
+    background-color: var(--bs-blue);
+    color: white;
+    transition: 150ms ease;
+}
+
+.inventory-item {
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.inventory-item .card-body .row {
+    justify-content: center;
+    user-select: none;
+}
+
+.inventory-item .card-body .row * {
+    width: unset;
+}

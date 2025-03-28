@@ -1,0 +1,2 @@
+npm i express body-parser ejs express-session sqlite3
+npm i nodemon -D

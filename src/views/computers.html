@@ -1,0 +1,212 @@
+<div class="container mt-5">
+    <div class="row">
+        <h2>Listado de computadoras</h2>
+        <hr />
+    </div>
+
+    <div class="row">
+        <table class="table table-primary table-responsive">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Nombre de la Máquina</th>
+                    <th scope="col">Dirección IP</th>
+                    <th scope="col">Dirección MAC</th>
+                    <th scope="col">Departamento</th>
+                    <th scope="col">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crear-computador">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td scope="row">1</td>
+                    <td>abogado</td>
+                    <td>192.168.7.241</td>
+                    <td>00:28:F8:C1:EA:CB</td>
+                    <td>Sistemas</td>
+                    <td>
+                        <button class="btn btn-primary">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td scope="row">2</td>
+                    <td>epoclin</td>
+                    <td>192.168.7.192</td>
+                    <td>00:28:F8:C3:FA:FF</td>
+                    <td>Sistemas</td>
+                    <td>
+                        <button class="btn btn-primary">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td scope="row">3</td>
+                    <td>admartinez</td>
+                    <td>192.168.7.233</td>
+                    <td>00:28:A8:D1:EA:C3</td>
+                    <td>Sistemas</td>
+                    <td>
+                        <button class="btn btn-primary">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="crear-computador" tabindex="-1" aria-labelledby="tituloModal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <form action="" method="post" class="w-100">
+                <div class="modal-content" style="margin: auto; width: 100%;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tituloModal">Agregar computadora</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container">
+                            <h5>Componentes del equipo</h5>
+                            <hr />
+                            <div class="row">
+                                <div class="col">
+                                    <span>Procesador</span>
+                                    <input type="text" name="procesador" class="form-control">
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col">
+                                            <span>Tipo de RAM</span>
+                                            <select class="form-select" name="tipoRam">
+                                                <option value="1">DDR</option>
+                                                <option value="2">DDR2</option>
+                                                <option value="3">DDR3</option>
+                                                <option value="4">DDR4</option>
+                                                <option value="5">DDR5</option>
+                                            </select>
+                                        </div>
+                                        <div class="col">
+                                            <span>Capacidad (GB)</span>
+                                            <input type="number" class="form-control" min="1" max="2048" name="capacidadRam">
+                                        </div>
+                                        <div class="col">
+                                            <span>Frecuencia (MHz)</span>
+                                            <input type="number" class="form-control" min="100" max="9000" name="frecuenciaRam">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <span>Placa madre</span>
+                                    <input type="text" class="form-control" name="placa">
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col">
+                                            <span>Almacenamiento</span>
+                                            <select class="form-select" name="tipoAlmacenamiento">
+                                                <option value="1">HDD</option>
+                                                <option value="2">SSD 2.5"</option>
+                                                <option value="3">M.2</option>
+                                                <option value="4">M.2 NVMe</option>
+                                            </select>
+                                        </div>
+                                        <div class="col">
+                                            <span>Capacidad (GB)</span>
+                                            <input type="number" class="form-control" min="1" max="99999" name="capacidadAlmacenamiento">
+                                        </div>
+                                        <div class="col"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <span>Tarjeta de video</span>
+                                    <input type="text" class="form-control" name="gpu">
+                                </div>
+                            </div>
+                            <br>
+                            <h5>Información de Red</h5>
+                            <hr />
+                            <div class="row">
+                                <div class="col">
+                                    <span>Dirección IP</span>
+                                    <input type="text" class="form-control" name="ip" id="dir-ip">
+                                </div>
+                                <div class="col">
+                                    <span>Dirección MAC</span>
+                                    <input type="text" class="form-control" name="mac" id="dir-mac" maxlength="17">
+                                </div>
+                            </div>
+
+                            <br>
+                            <h5>Ubicación</h5>
+                            <hr />
+                            
+                            <div class="row">
+                                <div class="col">
+                                    <span>Área</span>
+                                    <input type="text" class="form-control" name="area">
+                                </div>
+                                <div class="col">
+                                    <span>Responsable</span>
+                                    <input type="text" class="form-control" name="responsable">
+                                </div>
+                            </div>
+
+                            <br>
+                            <h5>Información adicional</h5>
+                            <hr/>
+
+                            <div class="row">
+                                <div class="col">
+                                    <span>Parlantes</span>
+                                    <br />
+                                    <input type="text" class="form-control" name="parlantes">
+                                </div>
+                                <div class="col">
+                                    <span>Cámara</span>
+                                    <br />
+                                    <input type="text" class="form-control" name="webcam">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col">
+                                    <span>Mouse</span>
+                                    <br />
+                                    <input type="text" class="form-control" name="mouse">
+                                </div>
+                                <div class="col">
+                                    <span>Teclado</span>
+                                    <br />
+                                    <input type="text" class="form-control" name="teclado">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col">
+                                    <span>Monitor</span>
+                                    <br />
+                                    <input type="text" class="form-control" name="monitor">
+                                </div>
+                                <div class="col"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Cerrar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="./js/computers.js"></script>
