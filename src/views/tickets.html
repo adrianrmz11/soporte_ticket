@@ -1,0 +1,100 @@
+<%
+
+function $$(varName) {
+    return locals[varName] ?? null;
+}
+
+function formatDate(date) {
+    const today = new Date();
+    today.setHours(today.getHours() - 3);
+
+    const seconds = (today - date) / 1000;
+
+    // Dias
+    if (seconds >= 86400) {
+        return `Hace ${~~(seconds / 86400)} día/s`;
+    }
+
+    // Horas
+    if (seconds >= 3600) {
+        return `Hace ${~~(seconds / 3600)} hora/s`;
+    }
+
+    // Minutos
+    if (seconds >= 60) {
+        return `Hace ${~~(seconds / 60)} minuto/s`;
+    }
+
+    return `Hace ${~~(seconds / 1)} segundos/s`;
+} 
+
+function formatStatus(status) {
+    const statusValue = {
+        0: "ticket-estado-finalizado",
+        1: "ticket-estado-enproceso",
+        2: "ticket-estado-pendiente",
+        3: "ticket-estado-vencido"
+    }
+
+    return statusValue[status] ?? ""; 
+}
+
+%>
+
+<link rel="stylesheet" href="css/ticket.css">
+<div class="container mt-5">
+    <div class="row">
+        <h2>Tickets</h2>
+    <hr/>
+    <% for (const ticket of $$("tickets")) { %>
+        <div class="row mb-3">
+            <div class="col">
+                <a class="ticket-container" href="/tickets?id=<%= ticket?.id %>">
+                    <div class="card ticket">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col">
+                                    <h5 class="card-title">
+                                        <%= ticket?.titulo %>
+                                    </h5>
+
+                                    <%
+                                    const descripcion = ticket?.descripcion;
+
+                                    if (descripcion.length > 128) {
+                                    %>
+                                        <%= descripcion.slice(0, 128) + "..." %>
+                                    <%
+                                        }
+                                        else {
+                                    %>
+                                        <%= descripcion %>
+                                    <% } %>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="container ticket-autor">
+                                        <div class="row-sm-1 ticket-autor-detalles">
+                                            <img src="img/foto-1.jpg" class="ticket-avatar">
+                                            <span><%= ticket?.usuario %></span>
+                                        </div>
+                                        <div class="row-sm-1 d-flex gap-2 ">
+                                            <div class="ticket-estado <%= formatStatus(ticket?.estado) %>" title="Ticket vencido"></div>
+                                            <span><%= ticket?.destado %></span>
+                                        </div>
+                                        <div class="row ticket-autor-hora">
+                                            <div>
+                                                <i class="fas fa-calendar-alt"></i>
+                                                <span><%= formatDate(ticket?.fcreacion) %></span>    
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    <% } %>
+    </div>
+</div>

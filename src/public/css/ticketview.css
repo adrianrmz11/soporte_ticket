@@ -1,0 +1,36 @@
+.ticket-encabezado {
+    display: flex;
+    flex-direction: column;
+}
+
+.ticket-imagenes {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.ticket-imagenes img {
+    width: 130px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.ticket-estado {
+    width: 12.5px;
+    height: 12.5px;
+    border-radius: 50%;
+}
+
+.ticket-estado-vencido {
+    background-color: red;
+}
+.ticket-estado-finalizado {
+    background-color: rgb(97, 190, 34);
+}
+.ticket-estado-enproceso {
+    background-color: rgb(23, 173, 166);
+}
+.ticket-estado-pendiente {
+    background-color: rgb(252, 114, 50);
+}

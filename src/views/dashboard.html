@@ -17,11 +17,14 @@
     
     %>
     <div class="main">
-        <div class="sidebar">
-            <div class="container sidebar-top">
+        <div class="header">
+            <div class="sidebar-top">
                 <h4>Sistema Soporte</h4>
                 <p>Administrador</p>
             </div>
+        </div>
+        <div class="sidebar">
+            <div style="height: 62.5px;">&nbsp;</div>
             <div class="container sidebar-item <%= location == 1 ? 'sidebar-item-active' : '' %>">
                 <a href="/dashboard">
                     <i class="fa-solid fa-house"></i>
@@ -62,15 +65,20 @@
         <div class="content">
             <% if (location == 1) { %>
                 <%- include('main.html') %>
+            <% } else if (location == 2) { %>
+                <%- include('tickets.html') %>
             <% } else if (location == 3) { %>
                 <%- include('inventory.html') %>
             <% }  else if (location == 6) { %>
                 <%- include('computers.html') %>
             <% }  else if (location == 7) { %>
                 <%- include('cpu.html') %>
+            <% }  else if (location == 8) { %>
+                <%- include('ticketview.html') %>
             <% } %>
         </div>
     </div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="js/global.js"></script>
 </html>

@@ -1,0 +1,50 @@
+<%
+
+function formatDate() {
+    
+}
+
+%>
+
+<link rel="stylesheet" href="css/ticketview.css">
+<div class="container mt-5">
+    <div class="row">
+        <h2><%= ticket?.titulo ?? "<Ticket sin titulo>" %></h2>
+        <hr/>
+    </div>
+    <div class="row">
+        <div class="col mb-4 ticket-encabezado">
+            <span>
+                <strong>Solicitante:</strong>
+                <%= ticket?.usuario %>
+            </span>
+            <span>  
+                <strong>Fecha del ticket:</strong>
+                <%= ticket?.fcreacion %>
+            </span>
+            <span>  
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <strong>Estado:</strong>
+                    <div class="ticket-estado ticket-estado-enproceso"></div>
+                    <%= ticket?.estado %>
+                </div>
+            </span>
+            <span>  
+                <strong>Título:</strong>
+                <%= ticket?.titulo %>
+            </span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <%= ticket?.descripcion %>
+        </div>
+    </div>
+    <div class="ticket-imagenes mt-5">
+        <img src="img/foto-1.png">
+        <img src="img/foto-1.png">
+        <img src="img/foto-1.png">
+        <img src="img/foto-1.png">
+        <img src="img/foto-1.png">
+    </div>
+</div>

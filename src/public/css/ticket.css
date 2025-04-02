@@ -1,0 +1,53 @@
+.ticket-avatar {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+}
+
+.ticket-autor span, .ticket-autor-hora span {
+    font-size: 0.75rem;
+}
+
+.ticket-container {
+    text-decoration: none;
+    color: unset;
+}
+
+.ticket {
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+.ticket-estado {
+    width: 12.5px;
+    height: 12.5px;
+    border-radius: 50%;
+}
+
+.ticket-estado-vencido {
+    background-color: red;
+}
+.ticket-estado-finalizado {
+    background-color: rgb(97, 190, 34);
+}
+.ticket-estado-enproceso {
+    background-color: rgb(23, 173, 166);
+}
+.ticket-estado-pendiente {
+    background-color: rgb(252, 114, 50);
+}
+
+.ticket .card-title {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ticket-autor-hora div {
+    display: flex;
+    gap: 5px;
+}
+
+.ticket-autor-detalles {
+    transform: translateX(-6px);
+    margin-bottom: 8px;
+}

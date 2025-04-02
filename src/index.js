@@ -1,9 +1,12 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const Database = require('./class/Database');
 const { join, resolve } = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const { getConnection, selectOne, selectAll } = require('./modules/connection');
+const { obtenerTickets, obtenerTicket } = require('./modules/queries');
 
 const app = express();
 
@@ -23,11 +26,10 @@ app.use(session({
     secret: '1D06E1021CB7A4D09BB1F485B0DB43996BB9F5EB523F95D0BB26E279EAF2C1F7',
     cookie: {
         secure: false
-    }
+    },
+    resave: false,
+    saveUninitialized: false
 }));
-
-// Crea la conexion a la base de datos.
-const db = new Database('./src/db/sst.db');
 
 // Funciones intermediarias.
 function requiresLogin(req, res, next) {
@@ -55,7 +57,7 @@ app.get('/', (req, res) => {
 app.post('/login', async (req, res) => {
     const { user = null, pass = null } = req.body;
 
-    const result = await db.query(`select * from usuario where usuario = '${user}' and clave = '${pass}'`);
+    const result = await selectOne(`select * from usuario where usuario = @user and clave = @pass`, { user, pass });
     
     const regexp_match_format = /^[a-zA-ZñÑ0-9@_]+$/g;
     const user_format = user?.match(regexp_match_format);
@@ -66,12 +68,12 @@ app.post('/login', async (req, res) => {
         return res.redirect('/');
     }
 
-    if (result.count < 1) {
+    if (!result) {
         req.session.error = "Credenciales inválidas.";
         return res.redirect('/');
     }
 
-    const usuarioAcceso = result.first();
+    const usuarioAcceso = result;
 
     req.session.userId = usuarioAcceso.id;
     req.session.expiresAt = Date.now() + MAX_AGE_SESSION;
@@ -90,8 +92,24 @@ app.get('/dashboard', requiresLogin, async (req, res) => {
 });
 
 app.get('/tickets', requiresLogin, async (req, res) => {
+    const ticketId = req.query['id'];
+
+    if (ticketId) {
+        const ticket = await obtenerTicket(ticketId);
+
+        res.render('dashboard.html', {
+            location: 8,
+            ticket
+        });
+
+        return;
+    }
+
+    const tickets = await obtenerTickets();
+
     res.render('dashboard.html', {
-        location: 2
+        location: 2,
+        tickets
     });
 });
 
@@ -114,8 +132,7 @@ app.get('/departments', requiresLogin, async (req, res) => {
 });
 
 app.get('/computers', async (req, res) => {
-    const result = await db.query('select * from procesador order by descripcion');
-    const cpus = result.all();
+    const cpus = await selectAll('select * from procesador order by descripcion');
 
     res.render('dashboard.html', {
         location: 6,
@@ -124,8 +141,7 @@ app.get('/computers', async (req, res) => {
 });
 
 app.get('/cpu', async (req, res) => {
-    const result = await db.query('select * from procesador');
-    const cpus = result.all();
+    const cpus = await selectAll('select * from procesador');
 
     res.render('dashboard.html', {
         location: 7,
@@ -149,9 +165,8 @@ app.post('/cpu', async (req, res) => {
 
 // Inicializar encendido de forma asíncrona.
 (async function init() {
-    await db.connect();
-
-    app.listen(APP_PORT, () => console.log(`Servidor de ticket alojado en el puerto ${APP_PORT}`));
+    //await db.connect()
+    app.listen(APP_PORT, () => console.log(`✅ Servidor de ticket alojado en el puerto: ${APP_PORT}`));
 })();
 
 process.on('uncaughtException', (err) => console.log(err));
