@@ -19,7 +19,6 @@ body {
 .header {
     grid-area: header;
     background-color: #e6e6e6;
-    color:;
 }
 
 .sidebar {
