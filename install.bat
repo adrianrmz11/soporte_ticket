@@ -1,0 +1,1 @@
+npm i body-parser dotenv ejs express express-session mssql sqlite3
