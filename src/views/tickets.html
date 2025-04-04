@@ -11,8 +11,12 @@ function formatDate(date) {
     const seconds = (today - date) / 1000;
 
     // Dias
+    if (seconds >= 86400 * 2) {
+        return `Hace ${~~(seconds / 86400)} días`;
+    }
+
     if (seconds >= 86400) {
-        return `Hace ${~~(seconds / 86400)} día/s`;
+        return `Hace ${~~(seconds / 86400)} día`;
     }
 
     // Horas
@@ -46,55 +50,119 @@ function formatStatus(status) {
     <div class="row">
         <h2>Tickets</h2>
     <hr/>
-    <% for (const ticket of $$("tickets")) { %>
-        <div class="row mb-3">
-            <div class="col">
-                <a class="ticket-container" href="/tickets?id=<%= ticket?.id %>">
-                    <div class="card ticket">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col">
-                                    <h5 class="card-title">
-                                        <%= ticket?.titulo %>
-                                    </h5>
-
-                                    <%
-                                    const descripcion = ticket?.descripcion;
-
-                                    if (descripcion.length > 128) {
-                                    %>
-                                        <%= descripcion.slice(0, 128) + "..." %>
-                                    <%
-                                        }
-                                        else {
-                                    %>
-                                        <%= descripcion %>
-                                    <% } %>
-                                </div>
-                                <div class="col-sm-3">
-                                    <div class="container ticket-autor">
-                                        <div class="row-sm-1 ticket-autor-detalles">
-                                            <img src="img/foto-1.jpg" class="ticket-avatar">
-                                            <span><%= ticket?.usuario %></span>
+    <div class="row">
+        <div class="col-sm-4">
+            <h5 style="font-weight: 400 !important;">Filtros</h5>
+            <form action="" method="get">
+                <div class="category-dropdown">
+                    <div class="category-dropdown-label">
+                        <span>Estado</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <hr style="margin: 5px 0 0 0;"/>
+                    <div class="filtro-estado-despliegue">
+                        <div class="container">
+                            <input type="radio" name="f" id="f-finalizado" value="0">
+                            <label for="f-finalizado">Finalizado</label>
+                        </div>
+                        <div class="container">
+                            <input type="radio" name="f" id="f-proceso" value="1">
+                            <label for="f-proceso">En Proceso</label>
+                        </div>
+                        <div class="container">
+                            <input type="radio" name="f" id="f-pendiente" value="2">
+                            <label for="f-pendiente">Pendiente</label>
+                        </div>
+                        <div class="container">
+                            <input type="radio" name="f" id="f-rechazado" value="3">
+                            <label for="f-rechazado">Rechazado</label>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary">Aplicar</button>
+            </form>
+        </div>
+        <div class="col">
+            <% for (const ticket of $$("tickets")) { %>
+                <div class="row mb-3">
+                    <div class="col">
+                        <a class="ticket-container" href="/tickets?id=<%= ticket?.id %>">
+                            <div class="card ticket">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col">
+                                            <h5 class="card-title">
+                                                <%= ticket?.titulo %>
+                                            </h5>
+        
+                                            <%
+                                            const descripcion = ticket?.descripcion;
+        
+                                            if (descripcion.length > 128) {
+                                            %>
+                                                <%= descripcion.slice(0, 128) + "..." %>
+                                            <%
+                                                }
+                                                else {
+                                            %>
+                                                <%= descripcion %>
+                                            <% } %>
                                         </div>
-                                        <div class="row-sm-1 d-flex gap-2 ">
-                                            <div class="ticket-estado <%= formatStatus(ticket?.estado) %>" title="Ticket vencido"></div>
-                                            <span><%= ticket?.destado %></span>
-                                        </div>
-                                        <div class="row ticket-autor-hora">
-                                            <div>
-                                                <i class="fas fa-calendar-alt"></i>
-                                                <span><%= formatDate(ticket?.fcreacion) %></span>    
+                                        <div class="col-sm-3">
+                                            <div class="container ticket-autor">
+                                                <div class="row-sm-1 ticket-autor-detalles">
+                                                    <img src="img/foto-1.jpg" class="ticket-avatar">
+                                                    <span><%= ticket?.usuario %></span>
+                                                </div>
+                                                <div class="row-sm-1 d-flex gap-2 ">
+                                                    <div class="ticket-estado <%= formatStatus(ticket?.estado) %>" title="Ticket vencido"></div>
+                                                    <span><%= ticket?.destado %></span>
+                                                </div>
+                                                <div class="row ticket-autor-hora">
+                                                    <div>
+                                                        <i class="fas fa-calendar-alt"></i>
+                                                        <span><%= formatDate(ticket?.fcreacion) %></span>    
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                </a>
-            </div>
+                </div>
+            <% } %>
         </div>
-    <% } %>
+    </div>
     </div>
 </div>
+<script>
+    // Obtener los parámetros del query string
+    const params = new URLSearchParams(window.location.search);
+    const valor = params.get('f'); // Por ejemplo, "1"
+
+    if (valor) {
+        const radio = document.querySelector(`input[name="f"][value="${valor}"]`);
+        if (radio) {
+            radio.checked = true;
+        }
+    }
+
+    var activo = false;
+
+    $(".category-dropdown-label").click(function(e) {
+        if (!activo) {
+            $(".filtro-estado-despliegue").prop("hidden", true);
+            $(".category-dropdown-label i").removeClass();
+            $(".category-dropdown-label i").addClass("fas fa-chevron-down");
+        }
+        else {
+            $(".filtro-estado-despliegue").prop("hidden", false);
+            $(".category-dropdown-label i").removeClass();
+            $(".category-dropdown-label i").addClass("fas fa-chevron-up");
+        }
+
+        activo = !activo;
+    });
+</script>

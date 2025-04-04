@@ -51,3 +51,18 @@
     transform: translateX(-6px);
     margin-bottom: 8px;
 }
+
+.category-dropdown {
+    width: 75%;
+    margin-bottom: 10px;
+}
+
+.category-dropdown i {
+    margin-top: 5px;
+}
+
+.category-dropdown-label {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
