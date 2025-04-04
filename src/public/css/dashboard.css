@@ -5,7 +5,7 @@ body {
 }
 
 .main {
-    --header-height: 50px;
+    --header-height: 80px;
     --sidebar-width: 250px;
 
     width: 100%;
@@ -19,6 +19,7 @@ body {
 .header {
     grid-area: header;
     background-color: #e6e6e6;
+    height: 80px;
 }
 
 .sidebar {
@@ -33,17 +34,17 @@ body {
 }
 
 .sidebar-top {
-    width: 300px;
     height: 100%;
     color: black;
     display: flex;
-    gap: 10px;
-    align-items: center;
+    flex-direction: column; 
+    gap: 0px;
     margin-left: 30px;
 }
 
 .sidebar-top :is(h4, p) {
-    margin-bottom: 0;
+    margin-bottom: -10px;
+    margin-top: 10px;
 }
 
 .sidebar-item {
