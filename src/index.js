@@ -105,13 +105,7 @@ app.get('/tickets', requiresLogin, async (req, res) => {
         return;
     }
 
-    var tickets = await obtenerTickets();
-
-    var filter = req.query['f'];
-
-    if ([0,1,2,3].includes(parseInt(filter))) {
-        tickets = tickets.filter(ticket => ticket.estado == filter);
-    }
+    const tickets = await obtenerTickets();
 
     res.render('dashboard.html', {
         location: 2,
