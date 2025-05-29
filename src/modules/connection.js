@@ -112,6 +112,7 @@ module.exports = {
     getConnection,
     select,
     selectOne,
-    selectAll
+    selectAll,
+    insert
 };
 

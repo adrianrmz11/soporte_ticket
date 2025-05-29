@@ -16,7 +16,7 @@ function isEmpty() {
  * @param {keyof TicketEstado} filtroEstado Filtro de estado.
  */
 async function obtenerTickets(filtroEstado = null) {
-    var query = `
+/*     var query = `
         select 
             t.id, 
             u.usuario, 
@@ -35,6 +35,31 @@ async function obtenerTickets(filtroEstado = null) {
             t.fcreacion 
         from tickets t 
         inner join usuario u on t.idusuario = u.id
+    `; */
+
+    var query = `
+        select 
+            t.id, 
+            case
+                when p.nombre1 is not null and p.apellido1 is not null then concat(p.nombre1, ' ', p.apellido1)
+                else u.usuario
+            end as usuario, 
+            t.titulo, 
+            t.descripcion, 
+            t.estado,
+            (
+                case
+                    when t.estado = 0 then 'Finalizado'
+                    when t.estado = 1 then 'En proceso'
+                    when t.estado = 2 then 'Pendiente'
+                    when t.estado = 3 then 'Vencido'
+                    else 'Sin definir'
+                end
+            ) as destado,
+            t.fcreacion 
+        from tickets t 
+        inner join usuario u on t.idusuario = u.id
+        left join persona p on u.idpersona = u.idpersona
     `;
 
     const estadoElegido = TicketEstado[filtroEstado];
@@ -87,7 +112,32 @@ async function obtenerTicket(id) {
     return result;
 }
 
+async function obtenerSeguimientos(ticketId) {
+    var query = `
+        select id_usuario, comentario, fcreacion from seguimiento where id_ticket = @ticketId
+    `;
+
+    const results = await selectAll(query, { ticketId });
+    return results;
+}
+
+async function obtenerUsuario(idusuario) {
+    var query = `
+        select usuario from usuario where id = @idusuario
+    `;
+
+    const result = await selectOne(query, { idusuario });
+
+    if (!result) {
+        return null;
+    }
+
+    return result.usuario;
+}
+
 module.exports = {
     obtenerTickets,
-    obtenerTicket
+    obtenerTicket,
+    obtenerSeguimientos,
+    obtenerUsuario
 };

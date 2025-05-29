@@ -46,57 +46,66 @@ function formatStatus(status) {
 <link rel="stylesheet" href="css/ticket.css">
 <div class="container mt-5">
     <div class="row">
-        <h2>Tickets</h2>
-    <hr/>
-    <% for (const ticket of $$("tickets")) { %>
-        <div class="row mb-3">
-            <div class="col">
-                <a class="ticket-container" href="/tickets?id=<%= ticket?.id %>">
-                    <div class="card ticket">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col">
-                                    <h5 class="card-title">
-                                        <%= ticket?.titulo %>
-                                    </h5>
+        <div class="col">
+            <h2>Tickets</h2>
+        </div>
+        <div class="col-sm-2">
+            <form action="/new_ticket" method="get">
+                <button class="btn btn-primary" type="submit"><i class="fas fa-book"></i> Nuevo Ticket</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <hr/>
+        <% for (const ticket of $$("tickets")) { %>
+            <div class="row mb-3">
+                <div class="col">
+                    <a class="ticket-container" href="/tickets?id=<%= ticket?.id %>">
+                        <div class="card ticket">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title">
+                                            <%= ticket?.titulo %>
+                                        </h5>
 
-                                    <%
-                                    const descripcion = ticket?.descripcion;
+                                        <%
+                                        const descripcion = ticket?.descripcion;
 
-                                    if (descripcion.length > 128) {
-                                    %>
-                                        <%= descripcion.slice(0, 128) + "..." %>
-                                    <%
-                                        }
-                                        else {
-                                    %>
-                                        <%= descripcion %>
-                                    <% } %>
-                                </div>
-                                <div class="col-sm-3">
-                                    <div class="container ticket-autor">
-                                        <div class="row-sm-1 ticket-autor-detalles">
-                                            <img src="img/foto-1.jpg" class="ticket-avatar">
-                                            <span><%= ticket?.usuario %></span>
-                                        </div>
-                                        <div class="row-sm-1 d-flex gap-2 ">
-                                            <div class="ticket-estado <%= formatStatus(ticket?.estado) %>" title="Ticket vencido"></div>
-                                            <span><%= ticket?.destado %></span>
-                                        </div>
-                                        <div class="row ticket-autor-hora">
-                                            <div>
-                                                <i class="fas fa-calendar-alt"></i>
-                                                <span><%= formatDate(ticket?.fcreacion) %></span>    
+                                        if (descripcion.length > 128) {
+                                        %>
+                                            <%= descripcion.slice(0, 128) + "..." %>
+                                        <%
+                                            }
+                                            else {
+                                        %>
+                                            <%= descripcion %>
+                                        <% } %>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="container ticket-autor">
+                                            <div class="row-sm-1 ticket-autor-detalles">
+                                                <img src="img/foto-1.jpg" class="ticket-avatar">
+                                                <span><%= ticket?.usuario %></span>
+                                            </div>
+                                            <div class="row-sm-1 d-flex gap-2 ">
+                                                <div class="ticket-estado <%= formatStatus(ticket?.estado) %>" title="Ticket vencido"></div>
+                                                <span><%= ticket?.destado %></span>
+                                            </div>
+                                            <div class="row ticket-autor-hora">
+                                                <div>
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                    <span><%= formatDate(ticket?.fcreacion) %></span>    
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             </div>
-        </div>
-    <% } %>
+        <% } %>
     </div>
 </div>

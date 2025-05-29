@@ -1,0 +1,25 @@
+<div class="container mt-5">
+    <div class="row">
+        <h2>Nuevo ticket</h2>
+        <hr/>
+    </div>
+    <form action="/new_ticket" method="post">
+        <div class="row">
+            <div class="col">
+                <label for="titulo">Título</label>
+                <input type="text" class="form-control" id="titulo" name="titulo" required>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <label for="descripcion">Descripción del ticket</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <button class="btn btn-primary" type="submit">Enviar Ticket</button>
+            </div>
+        </div>
+    </form>
+</div>

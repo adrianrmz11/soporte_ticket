@@ -31,7 +31,7 @@
                     Inicio
                 </a>
             </div>
-            <div class="container sidebar-item <%= location == 2 ? 'sidebar-item-active' : '' %>">
+            <div class="container sidebar-item <%= [2, 9].includes(location) ? 'sidebar-item-active' : '' %>">
                 <a href="/tickets">
                     <i class="fa-solid fa-ticket"></i>
                     Tickets
@@ -63,12 +63,16 @@
                 <%- include('tickets.html') %>
             <% } else if (location == 3) { %>
                 <%- include('inventory.html') %>
+            <% } else if (location == 4) { %>
+                <%- include('users.html') %>
             <% }  else if (location == 6) { %>
                 <%- include('computers.html') %>
             <% }  else if (location == 7) { %>
                 <%- include('cpu.html') %>
             <% }  else if (location == 8) { %>
                 <%- include('ticketview.html') %>
+            <% }  else if (location == 9) { %>
+                <%- include('newticket.html') %>
             <% } %>
         </div>
     </div>

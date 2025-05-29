@@ -1,0 +1,43 @@
+<%
+
+function $$(varName) {
+    return locals[varName] ?? null;
+}
+
+%>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de usuarios</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Listado de usuarios</h2>
+        <hr/>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (const user of $$("usuarios")) { %>
+                    <tr>
+                        <td><%= user.id %></td>
+                        <td><%= user.usuario %></td>
+                        <td>
+                            <a href="/edit_user?id=<%= user.id %>" class="btn btn-warning">Editar</a>
+                            <a href="/delete_user?id=<%= user.id %>" class="btn btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

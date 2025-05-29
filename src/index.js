@@ -5,8 +5,8 @@ const Database = require('./class/Database');
 const { join, resolve } = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const { getConnection, selectOne, selectAll } = require('./modules/connection');
-const { obtenerTickets, obtenerTicket } = require('./modules/queries');
+const { getConnection, selectOne, selectAll, insert } = require('./modules/connection');
+const { obtenerTickets, obtenerTicket, obtenerSeguimientos, obtenerUsuario } = require('./modules/queries');
 
 const app = express();
 
@@ -86,8 +86,17 @@ app.get('/logout', async (req, res) => {
 });
 
 app.get('/dashboard', requiresLogin, async (req, res) => {
+    const ticketsPendientes = await selectAll(`select * from tickets where estado = 2 order by fcreacion desc`);
+    const ticketsEnProceso = await selectAll(`select * from tickets where estado = 1 order by fcreacion desc`);
+    const ticketsVencidos = await selectAll(`select * from tickets where estado = 3 order by fcreacion desc`);
+    const ticketsFinalizados = await selectAll(`select * from tickets where estado = 0 order by fcreacion desc`);
+
     res.render('dashboard.html', {
-        location: 1
+        location: 1,
+        ticketsPendientes,
+        ticketsEnProceso,
+        ticketsVencidos,
+        ticketsFinalizados
     });
 });
 
@@ -96,10 +105,24 @@ app.get('/tickets', requiresLogin, async (req, res) => {
 
     if (ticketId) {
         const ticket = await obtenerTicket(ticketId);
+        const _seguimientos = await obtenerSeguimientos(ticketId);
+
+        const seguimientos = [];
+
+        for (const seguimiento of _seguimientos) {
+            const usuario = await obtenerUsuario(seguimiento.id_usuario);
+
+            seguimientos.push({
+                usuario: usuario ?? 'Desconocido',
+                ...seguimiento
+            });
+        }
 
         res.render('dashboard.html', {
             location: 8,
-            ticket
+            ticket,
+            seguimientos,
+            obtenerUsuario
         });
 
         return;
@@ -113,6 +136,31 @@ app.get('/tickets', requiresLogin, async (req, res) => {
     });
 });
 
+app.get('/new_ticket', requiresLogin, async (req, res) => {
+    res.render('dashboard.html', {
+        location: 9
+    });
+});
+
+app.post('/new_ticket', requiresLogin, async (req, res) => {
+    const { titulo = null, descripcion = null } = req.body;
+
+    if (!titulo || !descripcion) {
+        req.session.error = "Debe completar todos los campos.";
+        return res.redirect('/new_ticket');
+    }
+
+    const id_usuario = req.session.userId;
+
+    await insert(`insert into tickets (idusuario, titulo, descripcion, estado) values (@id_usuario, @titulo, @descripcion, 2)`, {
+        titulo,
+        descripcion,
+        id_usuario
+    });
+
+    res.redirect('/tickets');
+});
+
 app.get('/inventory', requiresLogin, async (req, res) => {
     res.render('dashboard.html', {
         location: 3
@@ -120,8 +168,11 @@ app.get('/inventory', requiresLogin, async (req, res) => {
 });
 
 app.get('/users', requiresLogin, async (req, res) => {
+    const usuarios = await selectAll('select * from usuario order by id');
+
     res.render('dashboard.html', {
-        location: 4
+        location: 4,
+        usuarios
     });
 });
 
@@ -161,6 +212,21 @@ app.post('/cpu', async (req, res) => {
     await db.query(`insert into procesador(descripcion, nucleos, hilos) values ('${cpuDescription}', ${cpuCores}, ${cpuThreads})`);
 
     res.redirect('/cpu');
+});
+
+app.post('/ticket_seguimiento', requiresLogin, async (req, res) => {
+    const { ticketId, comentario } = req.body;
+
+    const id_usuario = req.session.userId;
+
+    await insert(`insert into seguimiento (id_usuario, id_ticket, comentario) values (@id_usuario, @ticketId, @comentario)`, {
+        id_usuario,
+        ticketId,
+        comentario
+    });
+
+    // Redirigir al ticket.
+    res.redirect(`/tickets?id=${ticketId}`);
 });
 
 // Inicializar encendido de forma asíncrona.

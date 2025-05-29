@@ -81,3 +81,20 @@ body {
     grid-area: content;
     overflow-y: auto;
 }
+
+.card {
+    border: 3px solid rgba(0, 0, 0, 0.25);
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.25);
+}
+
+button, .btn-primary {
+    background: none;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    color: black;
+}
+
+button:hover, .btn-primary:hover {
+    background: rgba(54, 96, 99, 0.45);
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    color: white;
+}

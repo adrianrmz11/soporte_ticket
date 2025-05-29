@@ -1,8 +1,32 @@
 <%
 
-function formatDate() {
-    
+function $$(varName) {
+    return locals[varName] ?? null;
 }
+
+function formatDate(date) {
+    const today = new Date();
+    today.setHours(today.getHours() - 3);
+
+    const seconds = (today - date) / 1000;
+
+    // Dias
+    if (seconds >= 86400) {
+        return `Hace ${~~(seconds / 86400)} día/s`;
+    }
+
+    // Horas
+    if (seconds >= 3600) {
+        return `Hace ${~~(seconds / 3600)} hora/s`;
+    }
+
+    // Minutos
+    if (seconds >= 60) {
+        return `Hace ${~~(seconds / 60)} minuto/s`;
+    }
+
+    return `Hace ${~~(seconds / 1)} segundos/s`;
+} 
 
 %>
 
@@ -40,11 +64,52 @@ function formatDate() {
             <%= ticket?.descripcion %>
         </div>
     </div>
-    <div class="ticket-imagenes mt-5">
-        <img src="img/foto-1.png">
-        <img src="img/foto-1.png">
-        <img src="img/foto-1.png">
-        <img src="img/foto-1.png">
-        <img src="img/foto-1.png">
+    <!-- <div class="ticket-imagenes mt-5">
+
+    </div> -->
+    <h5 class="mt-5">Seguimientos (<%= seguimientos.length %>)</h5>
+    <hr class="mb-4"/>
+
+    <div class="seguimientos">
+        <% seguimientos.forEach(seguimiento => { %>
+            <div class="seguimiento row mb-3">
+                <div class="row">
+                    <div class="col-sm-1">
+                        <span>
+                            <strong><%= seguimiento.usuario %></strong>
+                        </span>
+                    </div>
+                    <div class="col">
+                        <span style="font-size: 0.7em;"><%= formatDate(seguimiento.fcreacion) %></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <span style="word-break: break-all;"><%= seguimiento.comentario %></span>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <div class="row" id="contenedor-seguimiento-texto" hidden>
+        <form action="/ticket_seguimiento" method="post">
+            <input hidden type="text" name="ticketId" value="<%= ticket?.id %>">
+            <div class="row">
+                <div class="col">
+                    <textarea class="form-control" placeholder="Agregar un comentario..." name="comentario" maxlength="1000" required></textarea>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col" id="contenedor-seguimiento-acciones" hidden>
+                    <button class="btn btn-primary" type="submit">Enviar</button>
+                    <input type="button" class="btn btn-secondary" id="boton-cancelar-seguimiento" value="Cancelar">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="row mt-3 mb-3">
+        <div class="col" id="contenedor-seguimiento-abrir">
+            <button class="btn btn-secondary" id="boton-responder-seguimiento">Responder</button>
+        </div>
     </div>
 </div>
+<script src="js/ticketview.js"></script>
