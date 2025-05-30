@@ -7,13 +7,43 @@
         <div class="row">
             <div class="col">
                 <label for="titulo">Título</label>
-                <input type="text" class="form-control" id="titulo" name="titulo" required>
+                <input type="text" class="form-control" id="titulo" name="titulo" maxlength="256" placeholder="Ingrese el título del ticket" required>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <label for="categoria">Categoria</label>
+                <select class="form-select" name="categoria" id="categoria">
+                    <option value="-1">--Seleccione una categoría--</option>
+                    <option value="SOFTWARE">SOFTWARE</option>
+                    <option value="HARDWARE">HARDWARE</option>
+                    <option value="REDES">REDES</option>
+                    <option value="OTROS">OTROS</option>
+                </select>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <label for="ubicacion">Ubicaciones</label>
+                <select class="form-select" name="ubicacion" id="ubicacion">
+                    <option value="-1">--Seleccione una ubicación--</option>
+                    <option value="LAB-1">LAB-1</option>
+                    <option value="LAB-2">LAB-2</option>
+                    <option value="LAB-3">LAB-3</option>
+                    <option value="LAB-4">LAB-4</option>
+                    <option value="AUDITORIO">AUDITORIO</option>
+                    <option value="OFICINA-1">OFICINA-1</option>
+                    <option value="OFICINA-2">OFICINA-2</option>
+                    <option value="OFICINA-3">OFICINA-3</option>
+                    <option value="OFICINA-4">OFICINA-4</option>
+                    <option value="OFICINA-5">OFICINA-5</option>
+                </select>
             </div>
         </div>
         <div class="row mt-4">
             <div class="col">
                 <label for="descripcion">Descripción del ticket</label>
-                <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="4" maxlength="1000" required></textarea>
             </div>
         </div>
         <div class="row mt-4">

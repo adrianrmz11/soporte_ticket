@@ -37,14 +37,14 @@ function formatDate(date) {
         <hr/>
     </div>
     <div class="row">
-        <div class="col mb-4 ticket-encabezado">
+        <div class="col mb-2 ticket-encabezado">
             <span>
                 <strong>Solicitante:</strong>
                 <%= ticket?.usuario %>
             </span>
             <span>  
                 <strong>Fecha del ticket:</strong>
-                <%= ticket?.fcreacion %>
+                <%= ticket?.fcreacion.toLocaleDateString('es-ES') %> (<%= formatDate(ticket?.fcreacion) %>)
             </span>
             <span>  
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -54,8 +54,12 @@ function formatDate(date) {
                 </div>
             </span>
             <span>  
-                <strong>Título:</strong>
-                <%= ticket?.titulo %>
+                <strong>Categoria:</strong>
+                <%= ticket?.categoria %>
+            </span>
+            <span>  
+                <strong>Ubicacion:</strong>
+                <%= ticket?.ubicacion %>
             </span>
         </div>
     </div>
@@ -72,19 +76,22 @@ function formatDate(date) {
 
     <div class="seguimientos">
         <% seguimientos.forEach(seguimiento => { %>
-            <div class="seguimiento row mb-3">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span>
-                            <strong><%= seguimiento.usuario %></strong>
-                        </span>
+            <div class="alert alert-secondary" style="background-color: rgba(226,227,229,.5);">
+                <div class="seguimiento row">
+                    <div class="row">
+                        <div class="col-sm-1">
+                            <span>
+                                <strong><%= seguimiento.usuario %></strong>
+                            </span>
+                        </div>
+                        <div class="col">
+                            <span style="font-size: 0.7em;"><%= formatDate(seguimiento.fcreacion) %></span>
+                        </div>
                     </div>
-                    <div class="col">
-                        <span style="font-size: 0.7em;"><%= formatDate(seguimiento.fcreacion) %></span>
+                    <hr class="m-0" style="width: 99%; margin: auto !important; color: rgba(0,0,0,0.3)" />
+                    <div class="row">
+                        <span style="word-break: break-all;"><%= seguimiento.comentario %></span>
                     </div>
-                </div>
-                <div class="row">
-                    <span style="word-break: break-all;"><%= seguimiento.comentario %></span>
                 </div>
             </div>
         <% }) %>
@@ -107,8 +114,26 @@ function formatDate(date) {
         </form>
     </div>
     <div class="row mt-3 mb-3">
-        <div class="col" id="contenedor-seguimiento-abrir">
-            <button class="btn btn-secondary" id="boton-responder-seguimiento">Responder</button>
+        <div class="col" id="contenedor-seguimiento-abrir" style="display: flex; gap: 5px;">
+            <% if (ticket.estado == 'En proceso') { %>
+                <button class="btn btn-secondary" id="boton-responder-seguimiento">Responder</button>
+            <% } %>
+            <% if (ticket.estado == 'Pendiente'/*  || ticket.estado == 'Finalizado' */) { %>
+                <div>
+                    <form action="/open_ticket" method="post">
+                        <input hidden name="ticketId" value="<%= ticket?.id %>">
+                        <button class="btn btn-primary">Abrir Ticket</button>
+                    </form>
+                </div>
+            <% } %>
+            <% if (ticket.estado == 'En proceso') { %>
+                <div>
+                    <form action="/close_ticket" method="post">
+                        <input hidden name="ticketId" value="<%= ticket?.id %>">
+                        <button class="btn btn-primary">Finalizar Ticket</button>
+                    </form>
+                </div>
+            <% } %>
         </div>
     </div>
 </div>

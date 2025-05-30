@@ -47,6 +47,8 @@ async function obtenerTickets(filtroEstado = null) {
             t.titulo, 
             t.descripcion, 
             t.estado,
+            t.categoria,
+            t.ubicacion,
             (
                 case
                     when t.estado = 0 then 'Finalizado'
@@ -60,6 +62,7 @@ async function obtenerTickets(filtroEstado = null) {
         from tickets t 
         inner join usuario u on t.idusuario = u.id
         left join persona p on u.idpersona = u.idpersona
+        order by t.fcreacion desc
     `;
 
     const estadoElegido = TicketEstado[filtroEstado];
@@ -92,6 +95,8 @@ async function obtenerTicket(id) {
             t.titulo, 
             t.descripcion, 
             t.fcreacion, 
+            t.categoria,
+            t.ubicacion,
             (
                 case
                     when t.estado = 0 then 'Finalizado'

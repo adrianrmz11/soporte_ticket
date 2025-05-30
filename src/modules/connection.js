@@ -108,11 +108,25 @@ async function insert(sql, params) {
     const result = stmt.query(sql);
 }
 
+async function update(sql, params) {
+    const pool = await getConnection();
+
+    const stmt = pool.request();
+
+    for (const param in params) {
+        const value = params[param];
+        stmt.input(param, value);
+    }
+
+    return stmt.query(sql);
+}
+
 module.exports = {
     getConnection,
     select,
     selectOne,
     selectAll,
-    insert
+    insert,
+    update
 };
 

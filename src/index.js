@@ -5,7 +5,7 @@ const Database = require('./class/Database');
 const { join, resolve } = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const { getConnection, selectOne, selectAll, insert } = require('./modules/connection');
+const { getConnection, selectOne, selectAll, insert, update } = require('./modules/connection');
 const { obtenerTickets, obtenerTicket, obtenerSeguimientos, obtenerUsuario } = require('./modules/queries');
 
 const app = express();
@@ -142,20 +142,43 @@ app.get('/new_ticket', requiresLogin, async (req, res) => {
     });
 });
 
-app.post('/new_ticket', requiresLogin, async (req, res) => {
-    const { titulo = null, descripcion = null } = req.body;
+app.post('/open_ticket', requiresLogin, async (req, res) => {
+    const { ticketId = null } = req.body;
 
-    if (!titulo || !descripcion) {
+    await update(`update tickets set estado = 1 where id = @ticketId`, { ticketId });
+
+    return res.redirect(`/tickets?id=${ticketId}`);
+});
+
+app.post('/close_ticket', requiresLogin, async (req, res) => {
+    const { ticketId = null } = req.body;
+
+    await update(`update tickets set estado = 0 where id = @ticketId`, { ticketId });
+
+    return res.redirect(`/tickets?id=${ticketId}`);
+});
+
+app.post('/new_ticket', requiresLogin, async (req, res) => {
+    const {
+        titulo = null, 
+        descripcion = null,
+        categoria = null,
+        ubicacion = null
+    } = req.body;
+
+    if (!titulo || !descripcion || !categoria || !ubicacion) {
         req.session.error = "Debe completar todos los campos.";
         return res.redirect('/new_ticket');
     }
 
     const id_usuario = req.session.userId;
 
-    await insert(`insert into tickets (idusuario, titulo, descripcion, estado) values (@id_usuario, @titulo, @descripcion, 2)`, {
+    await insert(`insert into tickets (idusuario, titulo, descripcion, estado, categoria, ubicacion) values (@id_usuario, @titulo, @descripcion, 2, @categoria, @ubicacion)`, {
         titulo,
         descripcion,
-        id_usuario
+        id_usuario,
+        categoria,
+        ubicacion
     });
 
     res.redirect('/tickets');
