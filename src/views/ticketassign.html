@@ -1,0 +1,42 @@
+<div class="container mt-5">
+    <div class="row mb-5">
+        <h2>Asignar responsable > Ticket #<%= ticketId %></h2>
+    </div>
+    <div class="container">
+        <form action="/assign_ticket" method="post">
+            <div class="mb-3">
+                <label for="responsable" class="form-label">Seleccionar responsable de soporte</label>
+                <select class="form-select" id="responsable" name="responsable">
+                    <option value="">--Asignación automática--</option>
+                    <% for (const usuario of usuarios) { %>
+                        <option value="<%= usuario?.id %>" data-image="default_user.jpg"><%= usuario?.usuario %></option>
+                    <% } %>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="prioridad" class="form-label">Prioridad</label>
+                <select class="form-select" id="prioridad" name="prioridad">
+                    <option value="0">Normal</option>
+                    <option value="1">Alta</option>
+                </select>
+            </div>
+            <input type="hidden" name="ticketId" value="<%= ticketId %>">
+            <button type="submit" class="btn btn-primary">Aplicar cambios</button>
+        </form>
+    </div>
+</div>
+<script>
+    $("#responsable").select2({
+        templateResult: function (data) {
+            if (!data.id) {
+                return data.text;
+            }
+
+            var img = $(data.element).data('image');
+            return $(`<span><img src="${img}">${data.text}</span>`);
+        },
+        templateSelection: function (data) {
+            return data.text;
+        }
+    });
+</script>

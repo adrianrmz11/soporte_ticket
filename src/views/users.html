@@ -4,40 +4,95 @@ function $$(varName) {
     return locals[varName] ?? null;
 }
 
+function pascalCase(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatDate(date) {
+    const today = new Date();
+    today.setHours(today.getHours() - 3);
+
+    const seconds = (today - date) / 1000;
+
+    // Dias
+    if (seconds >= 86400) {
+        return `Hace ${~~(seconds / 86400)} día/s`;
+    }
+
+    // Horas
+    if (seconds >= 3600) {
+        return `Hace ${~~(seconds / 3600)} hora/s`;
+    }
+
+    // Minutos
+    if (seconds >= 60) {
+        return `Hace ${~~(seconds / 60)} minuto/s`;
+    }
+
+    return `Hace ${~~(seconds / 1)} segundos/s`;
+} 
+
 %>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listado de usuarios</title>
-</head>
-<body>
-    <div class="container mt-5">
-        <h2>Listado de usuarios</h2>
-        <hr/>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% for (const user of $$("usuarios")) { %>
-                    <tr>
-                        <td><%= user.id %></td>
-                        <td><%= user.usuario %></td>
-                        <td>
-                            <a href="/edit_user?id=<%= user.id %>" class="btn btn-warning">Editar</a>
-                            <a href="/delete_user?id=<%= user.id %>" class="btn btn-danger">Eliminar</a>
-                        </td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
+<link rel="stylesheet" href="css/users.css">
+<div class="container mt-5">
+    <div class="row mb-5">
+        <div class="col">
+            <h2>Administrador de usuarios</h2>
+        </div>
+        <div class="col-sm-4">
+            <div class="row">
+                <div class="col">
+                    <select class="form-select" name="filtro" id="filtro-ticket" style="border: 2px solid rgba(0,0,0,.25);">
+                        <option value="-1">Todos</option>
+                        <option value="USUARIO">Usuarios</option>
+                        <option value="SOPORTE">Soporte</option>
+                        <option value="ADMINISTRADOR">Administrador</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <form action="/new_user" method="get">
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-book"></i> Nuevo Usuario</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-</body>
-</html>
+    <div class="container d-flex gap-3 flex-column">
+        <% for (const user of $$("usuarios")) { %>
+            <div class="usuario p-3">
+                <div class="row">
+                    <div class="col-sm-1 d-flex align-items-center justify-content-center">
+                        <img src="/default_user.jpg" style="max-width: 50px; max-height: 50px; border-radius: 50%;">
+                    </div>
+                    <div class="col">
+                        <div class="row">
+                            <h5 class="m-0"><%= user?.usuario %></h5>
+                        </div>
+                        <div class="row mt-1">
+                            <div class="col-sm-2">
+                                <span class="m-0 p-0 text-muted d-flex gap-2 align-items-center">
+                                    <i class="fa-regular fa-address-book"></i>
+                                    <%= pascalCase(user?.rol) %>
+                                </span>
+                            </div>
+                            <div class="col-sm-1">
+                                <span class="m-0 p-0 text-muted d-flex gap-2 align-items-center">
+                                    <i class="fa-regular fa-calendar"></i>
+                                    <%= user?.fcreacion.toLocaleDateString('es-ES') %>
+                                </span>
+                            </div>
+                            <div class="col-sm-4">
+                                <span class="m-0 p-0 text-muted d-flex gap-2 align-items-center">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <%= formatDate(user?.fcreacion) %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+</div>

@@ -1,0 +1,34 @@
+<div class="container mt-5">
+    <div class="row mb-5">
+        <h2>Nuevo usuario</h2>
+    </div>
+    <form action="/new_user" method="post" autocomplete="off">
+        <div class="row">
+            <div class="col">
+                <label for="nombre">Nombre de usuario</label>
+                <input type="text" class="form-control" id="nombre" name="usuario" maxlength="256" placeholder="Ingrese el nombre del usuario" required>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <label for="email">Contraseña</label>
+                <input type="password" class="form-control" id="email" name="clave" maxlength="256" placeholder="Ingrese la contraseña del usuario" required>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <label for="rol">Rol</label>
+                <select class="form-select" name="rol" id="rol">
+                    <option value="USUARIO">--Sin rol--</option>
+                    <option value="ADMINISTRADOR">Administrador</option>
+                    <option value="SOPORTE">Soporte</option>
+                </select>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <button class="btn btn-primary" type="submit">Crear Usuario</button>
+            </div>
+        </div>
+    </form>
+</div>

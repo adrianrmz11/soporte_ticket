@@ -9,3 +9,8 @@ $("#boton-cancelar-seguimiento").click(function(e) {
     $("#contenedor-seguimiento-abrir").removeAttr("hidden");
     $("#contenedor-seguimiento-texto").attr("hidden", "hidden");
 });
+
+function preventSending(event) {
+    event.preventDefault();
+    return false;
+}

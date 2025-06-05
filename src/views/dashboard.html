@@ -24,7 +24,19 @@
             </div>
         </div>
         <div class="sidebar">
-            <!-- <div style="height: 62.5px;">&nbsp;</div> -->
+            <div class="container d-flex flex-column justify-content-center align-items-center" style="height: 210px; text-align: center; gap: 15px;">
+                <div class="row">
+                    <div class="col">
+                        <img src="/default_user.jpg" style="max-width: 125px; max-height: 125px; border-radius: 50%;">
+                    </div>
+                </div>
+                <div class="row">
+                    <span>
+                        Bienvenido, 
+                        <strong><%= session?.usuario ?? "Invitado" %></strong>
+                    </span>
+                </div>
+            </div>
             <div class="container sidebar-item <%= location == 1 ? 'sidebar-item-active' : '' %>">
                 <a href="/dashboard">
                     <i class="fa-solid fa-house"></i>
@@ -37,12 +49,14 @@
                     Tickets
                 </a>
             </div>
-            <!-- <div class="container sidebar-item <%= location == 4 ? 'sidebar-item-active' : '' %>">
-                <a href="/users">
-                    <i class="fa-solid fa-user"></i>
-                    Usuarios
-                </a>
-            </div> -->
+            <% if (rol == 'ADMINISTRADOR') { %>
+                <div class="container sidebar-item <%= location == 4 ? 'sidebar-item-active' : '' %>">
+                    <a href="/users">
+                        <i class="fa-solid fa-user"></i>
+                        Usuarios
+                    </a>
+                </div>
+            <% } %>
             <!-- <div class="container sidebar-item <%= location == 5 ? 'sidebar-item-active' : '' %>">
                 <a href="/departments">
                     <i class="fa-solid fa-building"></i>
@@ -57,7 +71,9 @@
             </div>
         </div>
         <div class="content">
-            <% if (location == 1) { %>
+            <% if (location == -1) { %>
+                <%- include('forbidden.html') %>
+            <% } else if (location == 1) { %>
                 <%- include('main.html') %>
             <% } else if (location == 2) { %>
                 <%- include('tickets.html') %>
@@ -73,6 +89,10 @@
                 <%- include('ticketview.html') %>
             <% }  else if (location == 9) { %>
                 <%- include('newticket.html') %>
+            <% }  else if (location == 10) { %>
+                <%- include('newuser.html') %>
+            <% }  else if (location == 11) { %>
+                <%- include('ticketassign.html') %>
             <% } %>
         </div>
     </div>

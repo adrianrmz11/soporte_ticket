@@ -14,13 +14,13 @@
 }
 
 .ticket {
-    border: 2px solid rgba(0, 0, 0, 0.25);
+    border: 0px solid rgba(0, 0, 0, 0.25);
     box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .ticket-estado {
-    width: 12.5px;
-    height: 12.5px;
+    width: 14.41px;
+    height: 14.41px;
     border-radius: 50%;
 }
 

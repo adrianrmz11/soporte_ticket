@@ -43,6 +43,13 @@ async function getConnection() {
     }
 }
 
+var count = 0;
+
+function log(data) {
+    console.log(` --- SQL No. ${++count} --- `);
+    console.log(data.trim().split(/ +/g).join(" "));
+}
+
 function getType(value) {
     const dataTypes = {
         "string": mssql.VarChar,
@@ -59,6 +66,8 @@ function getType(value) {
  * @param {{ [param: string]: (string|number) }} params
  */
 async function select(sql, params) {
+    log(sql);
+
     const pool = await getConnection();
 
     const stmt = pool.request();
@@ -80,6 +89,8 @@ async function select(sql, params) {
  * @returns {Promise<*|null>}
  */
 async function selectOne(sql, params) {
+    log(sql);
+
     const results = await select(sql, params);
 
     return results[0] ?? null;
@@ -96,6 +107,8 @@ async function selectAll(sql, params) {
 }
 
 async function insert(sql, params) {
+    log(sql);
+
     const pool = await getConnection();
 
     const stmt = pool.request();
@@ -109,6 +122,8 @@ async function insert(sql, params) {
 }
 
 async function update(sql, params) {
+    log(sql);
+    
     const pool = await getConnection();
 
     const stmt = pool.request();

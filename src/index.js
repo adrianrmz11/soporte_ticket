@@ -6,7 +6,8 @@ const { join, resolve } = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const { getConnection, selectOne, selectAll, insert, update } = require('./modules/connection');
-const { obtenerTickets, obtenerTicket, obtenerSeguimientos, obtenerUsuario } = require('./modules/queries');
+const { obtenerTickets, obtenerTicket, obtenerSeguimientos, obtenerUsuario, obtenerTicketsUsuario } = require('./modules/queries');
+const io = require('socket.io');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 app.set('views', './src/views/');
 app.use(express.static('./src/public'));
+app.use(express.static('./src/assets'));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -74,9 +76,13 @@ app.post('/login', async (req, res) => {
     }
 
     const usuarioAcceso = result;
+    const rolUsuario = await selectOne(`select * from rol where idusuario = @idusuario`, { idusuario: usuarioAcceso.id });
 
     req.session.userId = usuarioAcceso.id;
     req.session.expiresAt = Date.now() + MAX_AGE_SESSION;
+    req.session.role = rolUsuario?.rol ?? 'USUARIO';
+    req.session.usuario = usuarioAcceso.usuario;
+
     res.redirect('/dashboard');
 });
 
@@ -91,12 +97,44 @@ app.get('/dashboard', requiresLogin, async (req, res) => {
     const ticketsVencidos = await selectAll(`select * from tickets where estado = 3 order by fcreacion desc`);
     const ticketsFinalizados = await selectAll(`select * from tickets where estado = 0 order by fcreacion desc`);
 
+
+    const ticketsPorDia = //await selectAll(`select DAY(fcreacion) as dia, COUNT(*) as tickets from tickets group by DAY(fcreacion)`);
+
+    await selectAll(`
+-- Obtener mes y año actuales
+DECLARE @mes INT = MONTH(GETDATE());
+DECLARE @anio INT = YEAR(GETDATE());
+
+-- Calcular último día del mes actual
+DECLARE @ultimodia INT = DAY(EOMONTH(GETDATE()));
+
+-- Generar tabla de días y contar tickets
+WITH DiasDelMes AS (
+    SELECT 1 AS dia
+    UNION ALL
+    SELECT dia + 1 FROM DiasDelMes WHERE dia + 1 <= @ultimodia
+)
+SELECT d.dia, COUNT(t.id) AS tickets
+FROM DiasDelMes d
+LEFT JOIN tickets t 
+    ON DAY(t.fcreacion) = d.dia 
+    AND MONTH(t.fcreacion) = @mes 
+    AND YEAR(t.fcreacion) = @anio
+GROUP BY d.dia
+ORDER BY d.dia
+OPTION (MAXRECURSION 31);  -- para limitar la recursión a 31 días
+
+    `)
+
     res.render('dashboard.html', {
         location: 1,
         ticketsPendientes,
         ticketsEnProceso,
         ticketsVencidos,
-        ticketsFinalizados
+        ticketsFinalizados,
+        rol: req.session.role,
+        session: req.session,
+        ticketsPorDia
     });
 });
 
@@ -122,30 +160,60 @@ app.get('/tickets', requiresLogin, async (req, res) => {
             location: 8,
             ticket,
             seguimientos,
-            obtenerUsuario
+            obtenerUsuario,
+            rol: req.session.role,
+            session: req.session
         });
 
         return;
     }
 
-    const tickets = await obtenerTickets();
+    if (req.session.role !== 'ADMINISTRADOR') {
+        var tickets = await obtenerTicketsUsuario(null, req.session.userId);
+
+        res.render('dashboard.html', {
+            location: 2,
+            tickets,
+            rol: req.session.role,
+            session: req.session
+        });
+
+        return;
+    }
+
+    var tickets = await obtenerTickets();
 
     res.render('dashboard.html', {
         location: 2,
-        tickets
+        tickets,
+        rol: req.session.role,
+        session: req.session
     });
 });
 
 app.get('/new_ticket', requiresLogin, async (req, res) => {
     res.render('dashboard.html', {
-        location: 9
+        location: 9,
+        rol: req.session.role,
+        session: req.session
     });
 });
 
 app.post('/open_ticket', requiresLogin, async (req, res) => {
     const { ticketId = null } = req.body;
 
+    // Cambiar estado del ticket.
     await update(`update tickets set estado = 1 where id = @ticketId`, { ticketId });
+
+    const usuario = req.session.usuario;
+
+    // Agregar un registro de seguimiento.
+    await insert(`insert into seguimiento (id_usuario, id_ticket, comentario, tseguimiento) values (@id_usuario, @ticketId, @comentario, @tseguimiento)`, {
+        id_usuario: -1, // -1 indica que es un seguimiento automático.
+        ticketId,
+        comentario: `<b>${usuario}</b> ha abierto el ticket a las ${new Date().toLocaleTimeString()}.`,
+        tseguimiento: "ACTIVIDAD"
+    });
 
     return res.redirect(`/tickets?id=${ticketId}`);
 });
@@ -154,6 +222,16 @@ app.post('/close_ticket', requiresLogin, async (req, res) => {
     const { ticketId = null } = req.body;
 
     await update(`update tickets set estado = 0 where id = @ticketId`, { ticketId });
+
+    const usuario = req.session.usuario;
+
+    // Agregar un registro de seguimiento.
+    await insert(`insert into seguimiento (id_usuario, id_ticket, comentario, tseguimiento) values (@id_usuario, @ticketId, @comentario, @tseguimiento)`, {
+        id_usuario: -1, // -1 indica que es un seguimiento automático.
+        ticketId,
+        comentario: `<b>${usuario}</b> ha cerrado el ticket a las ${new Date().toLocaleTimeString()}.`,
+        tseguimiento: "ACTIVIDAD"
+    });
 
     return res.redirect(`/tickets?id=${ticketId}`);
 });
@@ -191,11 +269,29 @@ app.get('/inventory', requiresLogin, async (req, res) => {
 });
 
 app.get('/users', requiresLogin, async (req, res) => {
-    const usuarios = await selectAll('select * from usuario order by id');
+    const usuarios = await selectAll(`
+            select 
+            u.usuario,
+            u.fcreacion,
+            coalesce((select rol from rol where idusuario = u.id), 'USUARIO') as rol
+            from usuario u
+            order by id
+        `);
+
+    if (req.session.role != "ADMINISTRADOR") {
+        return res.render('dashboard.html', {
+            location: -1,
+            usuarios,
+            rol: req.session.role,
+            session: req.session
+        });
+    }
 
     res.render('dashboard.html', {
         location: 4,
-        usuarios
+        usuarios,
+        rol: req.session.role,
+        session: req.session
     });
 });
 
@@ -221,6 +317,41 @@ app.get('/cpu', async (req, res) => {
         location: 7,
         cpus
     });
+});
+
+app.get('/new_user', requiresLogin, async (req, res) => {
+    res.render('dashboard.html', {
+        location: 10,
+        rol: req.session.role,
+        session: req.session
+    });
+});
+
+app.post('/new_user', requiresLogin, async (req, res) => {
+    const {
+        usuario = null,
+        clave = null,
+        rol = null
+    } = req.body;
+
+    await insert(`insert into usuario (idpersona, usuario, clave) values (@idpersona, @usuario, @clave)`, {
+        idpersona: 0,
+        usuario,
+        clave
+    });
+
+    console.log(req.body);
+
+    if (rol && rol != 'USUARIO') {
+        const usuarioAcceso = await selectOne(`select * from usuario where usuario = @usuario`, { usuario });
+
+        await insert(`insert into rol (idusuario, rol) values (@idusuario, @rol)`, {
+            idusuario: usuarioAcceso.id,
+            rol
+        });
+    }
+
+    res.redirect('/users');
 });
 
 app.post('/cpu', async (req, res) => {
@@ -250,6 +381,19 @@ app.post('/ticket_seguimiento', requiresLogin, async (req, res) => {
 
     // Redirigir al ticket.
     res.redirect(`/tickets?id=${ticketId}`);
+});
+
+app.get('/assign_ticket', requiresLogin, async (req, res) => {
+    const ticketId = req.query.id;
+    const usuarios = await selectAll(`select * from usuario u inner join rol r on u.id = r.idusuario where r.rol = 'SOPORTE'`);
+
+    res.render('dashboard.html', {
+        location: 11,
+        ticketId,
+        session: req.session,
+        rol: req.session.role,
+        usuarios
+    });
 });
 
 // Inicializar encendido de forma asíncrona.

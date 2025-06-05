@@ -40,15 +40,13 @@ async function obtenerTickets(filtroEstado = null) {
     var query = `
         select 
             t.id, 
-            case
-                when p.nombre1 is not null and p.apellido1 is not null then concat(p.nombre1, ' ', p.apellido1)
-                else u.usuario
-            end as usuario, 
+            u.usuario, 
             t.titulo, 
             t.descripcion, 
             t.estado,
             t.categoria,
             t.ubicacion,
+            coalesce(t.prioridad, 0) as prioridad,
             (
                 case
                     when t.estado = 0 then 'Finalizado'
@@ -80,6 +78,58 @@ async function obtenerTickets(filtroEstado = null) {
     }
 
     const results = await selectAll(query);
+
+    return results;
+}
+
+/**
+ * Obtiene los tickets registrados.
+ * @param {keyof TicketEstado} filtroEstado Filtro de estado.
+ */
+async function obtenerTicketsUsuario(filtroEstado = null, userId = null) {
+    var query = `
+        select 
+            t.id, 
+            u.usuario, 
+            t.titulo, 
+            t.descripcion, 
+            t.estado,
+            t.categoria,
+            t.ubicacion,
+            coalesce(t.prioridad, 0) as prioridad,
+            (
+                case
+                    when t.estado = 0 then 'Finalizado'
+                    when t.estado = 1 then 'En proceso'
+                    when t.estado = 2 then 'Pendiente'
+                    when t.estado = 3 then 'Vencido'
+                    else 'Sin definir'
+                end
+            ) as destado,
+            t.fcreacion 
+        from tickets t 
+        inner join usuario u on t.idusuario = u.id
+        left join persona p on u.idpersona = u.idpersona
+        where t.idusuario = @userId
+        order by t.fcreacion desc
+    `;
+
+    const estadoElegido = TicketEstado[filtroEstado];
+
+    // Ha escogido un filtro.
+    // Ej: Recuperar todos los tickets en estado pendiente.
+    if (estadoElegido) {
+        query += ` and t.estado = @estado`;
+        
+        const results = await selectAll(query, {
+            estado: estadoElegido,
+            userId
+        });
+
+        return results;
+    }
+
+    const results = await selectAll(query, { userId });
 
     return results;
 }
@@ -119,7 +169,7 @@ async function obtenerTicket(id) {
 
 async function obtenerSeguimientos(ticketId) {
     var query = `
-        select id_usuario, comentario, fcreacion from seguimiento where id_ticket = @ticketId
+        select id_usuario, comentario, fcreacion, tseguimiento from seguimiento where id_ticket = @ticketId
     `;
 
     const results = await selectAll(query, { ticketId });
@@ -144,5 +194,6 @@ module.exports = {
     obtenerTickets,
     obtenerTicket,
     obtenerSeguimientos,
-    obtenerUsuario
+    obtenerUsuario,
+    obtenerTicketsUsuario
 };
