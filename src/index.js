@@ -250,13 +250,14 @@ app.post('/new_ticket', requiresLogin, async (req, res) => {
     }
 
     const id_usuario = req.session.userId;
-
-    await insert(`insert into tickets (idusuario, titulo, descripcion, estado, categoria, ubicacion) values (@id_usuario, @titulo, @descripcion, 2, @categoria, @ubicacion)`, {
+    const id_usuario_creador=id_usuario;
+    await insert(`insert into tickets (idusuario, titulo, descripcion, estado, categoria, ubicacion,idcreador) values (@id_usuario, @titulo, @descripcion, 2, @categoria, @ubicacion,@id_usuario_creador)`, {
         titulo,
         descripcion,
         id_usuario,
         categoria,
-        ubicacion
+        ubicacion,
+        id_usuario_creador
     });
 
     res.redirect('/tickets');
@@ -384,6 +385,7 @@ app.post('/ticket_seguimiento', requiresLogin, async (req, res) => {
 });
 
 app.get('/assign_ticket', requiresLogin, async (req, res) => {
+    console.log("metodo get")
     const ticketId = req.query.id;
     const usuarios = await selectAll(`select * from usuario u inner join rol r on u.id = r.idusuario where r.rol = 'SOPORTE'`);
 
@@ -396,6 +398,27 @@ app.get('/assign_ticket', requiresLogin, async (req, res) => {
     });
 });
 
+
+app.post('/assign_ticket',requiresLogin,async(req,res)=>{
+    console.log("el post");
+    console.log(req.body);
+    const ticketId = req.body.ticketId;
+    const usuario= req.body.responsable;
+    console.log(ticketId);
+    console.log(usuario);
+    var ticket =parseInt(ticketId);
+    var user = parseInt(usuario);
+
+    await update(
+            `UPDATE tickets
+             SET idusuario = @user
+             WHERE id = @ticket`,
+            { user, ticket: ticketId }
+        );
+
+
+    res.redirect('/dashboard')
+});
 // Inicializar encendido de forma asíncrona.
 (async function init() {
     //await db.connect()

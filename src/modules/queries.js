@@ -110,7 +110,7 @@ async function obtenerTicketsUsuario(filtroEstado = null, userId = null) {
         from tickets t 
         inner join usuario u on t.idusuario = u.id
         left join persona p on u.idpersona = u.idpersona
-        where t.idusuario = @userId
+        where t.idcreador = @userId or t.idusuario=@userId
         order by t.fcreacion desc
     `;
 
