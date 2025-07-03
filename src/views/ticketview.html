@@ -52,7 +52,11 @@ function formatStatus(status) {
         <div class="col mb-2 ticket-encabezado">
             <span>
                 <strong>Asignatario:</strong>
-                <%= ticket?.usuario %>
+                <%= ticket?.asignado %>
+            </span>
+             <span>
+                <strong>Informante:</strong>
+                <%= ticket?.creador %>
             </span>
             <span>  
                 <strong>Fecha del ticket:</strong>

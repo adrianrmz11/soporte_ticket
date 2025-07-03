@@ -6,10 +6,11 @@ const { join, resolve } = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const { getConnection, selectOne, selectAll, insert, update } = require('./modules/connection');
-const { obtenerTickets, obtenerTicket, obtenerSeguimientos, obtenerUsuario, obtenerTicketsUsuario } = require('./modules/queries');
+const { obtenerTickets, obtenerTicket, obtenerSeguimientos, obtenerUsuario, obtenerTicketsUsuario ,obtenerUsuarioCreador} = require('./modules/queries');
 const io = require('socket.io');
 const { enviarNotificacion } = require('./email/emails');
 const { Console } = require('console');
+const { console } = require('inspector');
 const app = express();
 
 // Configuración de despliegue.
@@ -147,6 +148,9 @@ app.get('/tickets', requiresLogin, async (req, res) => {
         const ticket = await obtenerTicket(ticketId);
         const _seguimientos = await obtenerSeguimientos(ticketId);
 
+        console.log("Datos de los seguimientos:", _seguimientos);
+
+        const usuarioCreador = await obtenerUsuarioCreador(ticket.id);
         const seguimientos = [];
 
         for (const seguimiento of _seguimientos) {
@@ -163,6 +167,7 @@ app.get('/tickets', requiresLogin, async (req, res) => {
             ticket,
             seguimientos,
             obtenerUsuario,
+            usuarioCreador,
             rol: req.session.role,
             session: req.session
         });
@@ -228,6 +233,10 @@ app.post('/open_ticket', requiresLogin, async (req, res) => {
         JOIN usuario u ON u.id = t.idcreador
         WHERE t.id = @ticketId
     `, { ticketId });
+
+
+    const Creador = await obtenerUsuarioCreador(ticketId);
+
 
     // Verificación
     if (!ticketData) {
@@ -321,6 +330,11 @@ app.post('/new_ticket', requiresLogin, async (req, res) => {
 
     const id_usuario = req.session.userId;
     const id_usuario_creador = id_usuario;
+
+
+    console.log("Datos del ticket SJKHLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:", {
+        titulo,descripcion, categoria, ubicacion, id_usuario, id_usuario_creador
+    });
 
     // 1. Crear el ticket (asignado a nadie aún; idusuario será actualizado por trigger)
     await insert(`

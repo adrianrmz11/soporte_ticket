@@ -140,33 +140,49 @@ async function obtenerTicketsUsuario(filtroEstado = null, userId = null) {
  */
 async function obtenerTicket(id) {
     var query = `
-        select 
-            t.id, 
-            t.titulo, 
-            t.descripcion, 
-            t.fcreacion, 
-            t.categoria,
-            t.ubicacion,
-            (
-                case
-                    when t.estado = 0 then 'Finalizado'
-                    when t.estado = 1 then 'En proceso'
-                    when t.estado = 2 then 'Pendiente'
-                    when t.estado = 3 then 'Vencido'
-                    else 'Sin definir'
-                end
-            ) as estado,
-            u.usuario 
-        from tickets t 
-        inner join usuario u on t.idusuario = u.id 
-        where t.id = @id
+       SELECT 
+    t.id, 
+    t.titulo, 
+    t.descripcion, 
+    t.fcreacion, 
+    t.categoria,
+    t.ubicacion,
+    CASE
+        WHEN t.estado = 0 THEN 'Finalizado'
+        WHEN t.estado = 1 THEN 'En proceso'
+        WHEN t.estado = 2 THEN 'Pendiente'
+        WHEN t.estado = 3 THEN 'Vencido'
+        ELSE 'Sin definir'
+    END AS estado,
+    u.usuario AS asignado,           -- usuario asignado (t.idusuario)
+    c.usuario AS creador             -- usuario creador (t.idcreador)
+FROM tickets t
+INNER JOIN usuario u ON t.idusuario = u.id     -- soporte asignado
+INNER JOIN usuario c ON t.idcreador = c.id     -- creador del ticket
+WHERE t.id = @id
     `;
 
     const result = await selectOne(query, { id });
 
     return result;
 }
+async function obtenerUsuarioCreador(ticketid) {
 
+    var query = `
+       select u.usuario from usuario u join tickets t on t.idcreador= u.id where t.id= @ticketid
+    `;
+
+    const result = await selectOne(query, { ticketid });
+    
+
+    if (!result) {
+        return null;
+    }
+
+    return {
+        nombre_creador: result.usuario
+    };
+}
 async function obtenerSeguimientos(ticketId) {
     var query = `
         select id_usuario, comentario, fcreacion, tseguimiento from seguimiento where id_ticket = @ticketId
@@ -175,6 +191,8 @@ async function obtenerSeguimientos(ticketId) {
     const results = await selectAll(query, { ticketId });
     return results;
 }
+
+
 
 async function obtenerUsuario(idusuario) {
     var query = `
@@ -195,5 +213,6 @@ module.exports = {
     obtenerTicket,
     obtenerSeguimientos,
     obtenerUsuario,
-    obtenerTicketsUsuario
+    obtenerTicketsUsuario,
+    obtenerUsuarioCreador
 };
