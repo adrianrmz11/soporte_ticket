@@ -8,12 +8,14 @@ const session = require('express-session');
 const { getConnection, selectOne, selectAll, insert, update } = require('./modules/connection');
 const { obtenerTickets, obtenerTicket, obtenerSeguimientos, obtenerUsuario, obtenerTicketsUsuario } = require('./modules/queries');
 const io = require('socket.io');
-
+const { enviarNotificacion } = require('./email/emails');
+const { Console } = require('console');
 const app = express();
 
 // Configuración de despliegue.
 const APP_PORT = 4543;
 const MAX_AGE_SESSION = 60_000 * 15;
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // Configuración del servidor.
 app.set('view engine', 'ejs');
@@ -61,14 +63,14 @@ app.post('/login', async (req, res) => {
 
     const result = await selectOne(`select * from usuario where usuario = @user and clave = @pass`, { user, pass });
     
-    const regexp_match_format = /^[a-zA-ZñÑ0-9@_]+$/g;
-    const user_format = user?.match(regexp_match_format);
-    const pass_format = pass?.match(regexp_match_format);
+    // const regexp_match_format = /^[a-zA-ZñÑ0-9@_]+$/g;
+    // const user_format = user?.match(regexp_match_format);
+    // const pass_format = pass?.match(regexp_match_format);
 
-    if (!user_format || !pass_format) {
-        req.session.error = "Formato de credenciales no válido.";
-        return res.redirect('/');
-    }
+    // if (!user_format || !pass_format) {
+    //     req.session.error = "Formato de credenciales no válido.";
+    //     return res.redirect('/');
+    // }
 
     if (!result) {
         req.session.error = "Credenciales inválidas.";
@@ -201,40 +203,108 @@ app.get('/new_ticket', requiresLogin, async (req, res) => {
 
 app.post('/open_ticket', requiresLogin, async (req, res) => {
     const { ticketId = null } = req.body;
-
-    // Cambiar estado del ticket.
-    await update(`update tickets set estado = 1 where id = @ticketId`, { ticketId });
-
     const usuario = req.session.usuario;
 
-    // Agregar un registro de seguimiento.
-    await insert(`insert into seguimiento (id_usuario, id_ticket, comentario, tseguimiento) values (@id_usuario, @ticketId, @comentario, @tseguimiento)`, {
-        id_usuario: -1, // -1 indica que es un seguimiento automático.
+    // Cambiar estado del ticket
+    await update(`UPDATE tickets SET estado = 1 WHERE id = @ticketId`, { ticketId });
+
+    console.log(`El usuario ${usuario} ha abierto el ticket con ID: ${ticketId}`);
+
+    // Insertar seguimiento automático
+    await insert(`
+        INSERT INTO seguimiento (id_usuario, id_ticket, comentario, tseguimiento)
+        VALUES (@id_usuario, @ticketId, @comentario, @tseguimiento)
+    `, {
+        id_usuario: -1,
         ticketId,
         comentario: `<b>${usuario}</b> ha abierto el ticket a las ${new Date().toLocaleTimeString()}.`,
         tseguimiento: "ACTIVIDAD"
     });
+
+    // Obtener datos del ticket
+    const ticketData = await selectOne(`
+        SELECT t.id, t.titulo, t.idcreador, u.usuario AS correo_creador, u.usuario AS nombre_creador
+        FROM tickets t
+        JOIN usuario u ON u.id = t.idcreador
+        WHERE t.id = @ticketId
+    `, { ticketId });
+
+    // Verificación
+    if (!ticketData) {
+        console.warn("No se encontró información del ticket para enviar correo.");
+        return res.redirect(`/tickets?id=${ticketId}`);
+    }
+
+    try {
+        await enviarNotificacion(
+            ticketData.correo_creador,                     // destino
+            `Ticket #${ticketId} marcado como En Curso`,  // asunto
+            'abierto',                                     // plantilla HTML: abierto.html
+            {
+                NOMBRE: ticketData.nombre_creador,
+                ID_TICKET: ticketData.id,
+                TITULO: ticketData.titulo
+            }
+        );
+        console.log("Correo enviado al creador del ticket.");
+    } catch (error) {
+        console.error("❌ Error al enviar correo:", error);
+    }
 
     return res.redirect(`/tickets?id=${ticketId}`);
 });
 
 app.post('/close_ticket', requiresLogin, async (req, res) => {
     const { ticketId = null } = req.body;
-
-    await update(`update tickets set estado = 0 where id = @ticketId`, { ticketId });
-
     const usuario = req.session.usuario;
 
-    // Agregar un registro de seguimiento.
-    await insert(`insert into seguimiento (id_usuario, id_ticket, comentario, tseguimiento) values (@id_usuario, @ticketId, @comentario, @tseguimiento)`, {
-        id_usuario: -1, // -1 indica que es un seguimiento automático.
+    // Cambiar estado del ticket a CERRADO (0)
+    await update(`UPDATE tickets SET estado = 0 WHERE id = @ticketId`, { ticketId });
+
+    // Insertar seguimiento automático
+    await insert(`
+        INSERT INTO seguimiento (id_usuario, id_ticket, comentario, tseguimiento)
+        VALUES (@id_usuario, @ticketId, @comentario, @tseguimiento)
+    `, {
+        id_usuario: -1,
         ticketId,
         comentario: `<b>${usuario}</b> ha cerrado el ticket a las ${new Date().toLocaleTimeString()}.`,
         tseguimiento: "ACTIVIDAD"
     });
 
+    // Obtener datos del ticket para el correo
+    const ticketData = await selectOne(`
+        SELECT t.id, t.titulo, t.idcreador, u.usuario AS correo_creador, u.usuario AS nombre_creador
+        FROM tickets t
+        JOIN usuario u ON u.id = t.idcreador
+        WHERE t.id = @ticketId
+    `, { ticketId });
+
+    if (!ticketData) {
+        console.warn("No se encontró información del ticket para enviar correo.");
+        return res.redirect(`/tickets?id=${ticketId}`);
+    }
+
+    try {
+        await enviarNotificacion(
+            ticketData.correo_creador,
+            `Ticket #${ticketId} cerrado correctamente`,
+            'cerrado', // plantilla cerrado.html
+            {
+                NOMBRE: ticketData.nombre_creador,
+                ID_TICKET: ticketData.id,
+                TITULO: ticketData.titulo
+            }
+        );
+        console.log("✅ Correo de cierre de ticket enviado.");
+    } catch (error) {
+        console.error("❌ Error al enviar correo de cierre:", error);
+    }
+
     return res.redirect(`/tickets?id=${ticketId}`);
 });
+
+
 
 app.post('/new_ticket', requiresLogin, async (req, res) => {
     const {
@@ -250,8 +320,13 @@ app.post('/new_ticket', requiresLogin, async (req, res) => {
     }
 
     const id_usuario = req.session.userId;
-    const id_usuario_creador=id_usuario;
-    await insert(`insert into tickets (idusuario, titulo, descripcion, estado, categoria, ubicacion,idcreador) values (@id_usuario, @titulo, @descripcion, 2, @categoria, @ubicacion,@id_usuario_creador)`, {
+    const id_usuario_creador = id_usuario;
+
+    // 1. Crear el ticket (asignado a nadie aún; idusuario será actualizado por trigger)
+    await insert(`
+        INSERT INTO tickets (idusuario, titulo, descripcion, estado, categoria, ubicacion, idcreador)
+        VALUES (@id_usuario, @titulo, @descripcion, 2, @categoria, @ubicacion, @id_usuario_creador)
+    `, {
         titulo,
         descripcion,
         id_usuario,
@@ -260,9 +335,71 @@ app.post('/new_ticket', requiresLogin, async (req, res) => {
         id_usuario_creador
     });
 
+    // 2. Obtener el ID del ticket recién creado (último insertado por este usuario)
+    const ticketRecienCreado = await selectOne(`
+        SELECT TOP 1 * FROM tickets
+        WHERE idcreador = @idcreador
+        ORDER BY fcreacion DESC
+    `, { idcreador: id_usuario_creador });
+
+    if (!ticketRecienCreado) {
+        console.error("❌ No se encontró el ticket recién creado.");
+        return res.redirect('/tickets');
+    }
+
+    const ticketId = ticketRecienCreado.id;
+
+    // 3. Enviar notificación al creador del ticket
+    try {
+        await enviarNotificacion(
+            req.session.usuario, // correo del creador
+            `Ticket #${ticketId} creado correctamente`,
+            'creado', // plantilla: creado.html
+            {
+                NOMBRE: req.session.usuario,
+                ID_TICKET: ticketId,
+                TITULO: titulo
+            }
+        );
+        console.log("✅ Correo de creación enviado al creador.");
+    } catch (err) {
+        console.error("❌ Error enviando correo al creador:", err);
+    }
+
+    // 4. Esperar un poco a que el TRIGGER actualice el idusuario (asignatario)
+    await sleep(1000); // espera 1 segundo
+
+    // 5. Obtener datos actualizados del ticket, ya con idusuario asignado por el trigger
+    const ticketConSoporte = await selectOne(`
+        SELECT t.id, t.titulo, u.usuario AS correo_soporte
+        FROM tickets t
+        JOIN usuario u ON u.id = t.idusuario
+        WHERE t.id = @ticketId
+    `, { ticketId });
+
+    // 6. Enviar correo al soporte asignado
+    if (ticketConSoporte?.correo_soporte) {
+        try {
+            await enviarNotificacion(
+                ticketConSoporte.correo_soporte,
+                `🎯 Nuevo ticket asignado: #${ticketId}`,
+                'asignado',
+                {
+                    NOMBRE: ticketConSoporte.correo_soporte,
+                    ID_TICKET: ticketId,
+                    TITULO: titulo
+                }
+            );
+            console.log("✅ Correo enviado al soporte asignado.");
+        } catch (err) {
+            console.error("❌ Error enviando correo al soporte:", err);
+        }
+    } else {
+        console.warn("⚠️ No se encontró correo del soporte asignado.");
+    }
+
     res.redirect('/tickets');
 });
-
 app.get('/inventory', requiresLogin, async (req, res) => {
     res.render('dashboard.html', {
         location: 3
@@ -369,18 +506,68 @@ app.post('/cpu', async (req, res) => {
     res.redirect('/cpu');
 });
 
+
 app.post('/ticket_seguimiento', requiresLogin, async (req, res) => {
     const { ticketId, comentario } = req.body;
-
     const id_usuario = req.session.userId;
 
-    await insert(`insert into seguimiento (id_usuario, id_ticket, comentario) values (@id_usuario, @ticketId, @comentario)`, {
-        id_usuario,
-        ticketId,
-        comentario
-    });
+    // 1. Insertar el comentario en la tabla seguimiento
+    await insert(`
+        INSERT INTO seguimiento (id_usuario, id_ticket, comentario)
+        VALUES (@id_usuario, @ticketId, @comentario)
+    `, { id_usuario, ticketId, comentario });
 
-    // Redirigir al ticket.
+    // 2. Obtener los datos del ticket, creador y soporte asignado
+    const ticketData = await selectOne(`
+        SELECT t.id, t.titulo, t.idcreador, t.idusuario AS idsoporte, 
+               c.usuario AS correo_creador, s.usuario AS correo_soporte
+        FROM tickets t
+        JOIN usuario c ON t.idcreador = c.id
+        JOIN usuario s ON t.idusuario = s.id
+        WHERE t.id = @ticketId
+    `, { ticketId });
+
+    // 3. Enviar correo al creador del ticket
+    if (ticketData?.correo_creador) {
+        try {
+            await enviarNotificacion(
+                ticketData.correo_creador,
+                `Nuevo comentario en el ticket #${ticketId}`,
+                'comentario_creador',
+                {
+                    NOMBRE: ticketData.correo_creador,
+                    ID_TICKET: ticketId,
+                    TITULO: ticketData.titulo,
+                    COMENTARIO: comentario
+                }
+            );
+            console.log("✅ Correo enviado al creador.");
+        } catch (err) {
+            console.error("❌ Error enviando correo al creador:", err);
+        }
+    }
+
+    // 4. Si el comentario lo hace alguien distinto al soporte, enviar correo al soporte asignado
+    if (ticketData?.correo_soporte && ticketData.idsoporte !== id_usuario) {
+        try {
+            await enviarNotificacion(
+                ticketData.correo_soporte,
+                `Nuevo comentario en el ticket #${ticketId}`,
+                'comentario_soporte',
+                {
+                    NOMBRE: ticketData.correo_soporte,
+                    ID_TICKET: ticketId,
+                    TITULO: ticketData.titulo,
+                    COMENTARIO: comentario
+                }
+            );
+            console.log("✅ Correo enviado al soporte.");
+        } catch (err) {
+            console.error("❌ Error enviando correo al soporte:", err);
+        }
+    }
+
+    // Redirigir al ticket para ver el seguimiento
     res.redirect(`/tickets?id=${ticketId}`);
 });
 
@@ -398,26 +585,73 @@ app.get('/assign_ticket', requiresLogin, async (req, res) => {
     });
 });
 
+app.post('/assign_ticket', requiresLogin, async (req, res) => {
+    const ticketId = parseInt(req.body.ticketId);
+    const userId = parseInt(req.body.responsable);
 
-app.post('/assign_ticket',requiresLogin,async(req,res)=>{
-    console.log("el post");
-    console.log(req.body);
-    const ticketId = req.body.ticketId;
-    const usuario= req.body.responsable;
-    console.log(ticketId);
-    console.log(usuario);
-    var ticket =parseInt(ticketId);
-    var user = parseInt(usuario);
+    // 1. Actualizar el ticket con el nuevo asignatario
+    await update(`
+        UPDATE tickets
+        SET idusuario = @user
+        WHERE id = @ticket
+    `, { user: userId, ticket: ticketId });
 
-    await update(
-            `UPDATE tickets
-             SET idusuario = @user
-             WHERE id = @ticket`,
-            { user, ticket: ticketId }
-        );
+    // 2. Obtener información del nuevo asignado y del ticket
+    const datos = await selectOne(`
+        SELECT 
+            t.id,
+            t.titulo,
+            t.idcreador,
+            u.usuario AS correo_asignado,
+            u.usuario AS nombre_asignado,
+            c.usuario AS correo_creador
+        FROM tickets t
+        JOIN usuario u ON t.idusuario = u.id
+        JOIN usuario c ON t.idcreador = c.id
+        WHERE t.id = @ticketId
+    `, { ticketId });
 
+    // 3. Enviar correo al asignado
 
-    res.redirect('/dashboard')
+    console.log("Datos del ticket para asignatarios:", datos);
+
+    if (datos?.correo_asignado) {
+        try {
+            await enviarNotificacion(
+                datos.correo_asignado,
+                `🎯 Te asignaron un nuevo ticket #${ticketId}`,
+                'asignado',
+                {
+                    NOMBRE: datos.correo_asignado,
+                    ID_TICKET: datos.id,
+                    TITULO: datos.titulo
+                }
+            );
+            console.log("✅ Correo enviado al nuevo asignatario.");
+        } catch (err) {
+            console.error("❌ Error enviando correo al asignado:", err);
+        }
+    }
+
+    // 4. (Opcional) Avisar al creador del ticket que hubo cambio
+    // if (datos?.correo_creador) {
+    //     try {
+    //         await enviarNotificacion(
+    //             datos.correo_creador,
+    //             `🔄 El ticket #${ticketId} fue asignado a un soporte`,
+    //             'reasignado',
+    //             {
+    //                 ID_TICKET: datos.id,
+    //                 TITULO: datos.titulo
+    //             }
+    //         );
+    //         console.log("📩 Aviso enviado al creador del ticket.");
+    //     } catch (err) {
+    //         console.error("⚠️ Error notificando al creador:", err);
+    //     }
+    // }
+
+    res.redirect('/dashboard');
 });
 // Inicializar encendido de forma asíncrona.
 (async function init() {
